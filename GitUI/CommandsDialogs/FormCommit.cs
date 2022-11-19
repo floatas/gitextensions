@@ -553,6 +553,15 @@ namespace GitUI.CommandsDialogs
                         _templateLoadErrorCaption.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
 
+                var jiraTicketRegex = @"(?<JiraTicket>\w+-\d+)";
+                var regex = new Regex(jiraTicketRegex);
+                var branch = Module.GetSelectedBranch();
+                if (regex.IsMatch(branch))
+                {
+                    var match = regex.Match(branch);
+                    text = match.Groups["JiraTicket"].Value + " ";
+                }
+
                 Message.Text = text; // initial assignment
                 _commitTemplate = text;
             }
@@ -861,7 +870,7 @@ namespace GitUI.CommandsDialogs
                 case Command.Refresh: RescanChanges(); return true;
                 case Command.SelectNext:
                 case Command.SelectNext_AlternativeHotkey1:
-                case Command.SelectNext_AlternativeHotkey2: MoveSelection(1);  return true;
+                case Command.SelectNext_AlternativeHotkey2: MoveSelection(1); return true;
                 case Command.SelectPrevious:
                 case Command.SelectPrevious_AlternativeHotkey1:
                 case Command.SelectPrevious_AlternativeHotkey2: MoveSelection(-1); return true;
