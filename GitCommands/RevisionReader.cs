@@ -169,6 +169,9 @@ namespace GitCommands
                 // TODO Make it possible to explicitly activate Trace printouts like this
                 Debug.WriteLine($"**** [{nameof(RevisionReader)}] Emitted {revisionCount} revisions in {sw.Elapsed.TotalMilliseconds:#,##0.#} ms. bufferSize={buffer.Length} parseErrors={_noOfParseError}");
 #endif
+
+                // Wait for possible exceptions from the process, which has been started with throwOnErrorExit activated
+                process.WaitForExit();
             }
 
             if (!cancellationToken.IsCancellationRequested)
@@ -189,7 +192,8 @@ namespace GitCommands
                 { AppSettings.RevisionSortOrder == RevisionSortOrder.Topology, "--topo-order" },
 
                 revisionFilter,
-                { !string.IsNullOrWhiteSpace(pathFilter), $"-- {pathFilter}" }
+                "--",
+                { !string.IsNullOrWhiteSpace(pathFilter), pathFilter }
             };
         }
 

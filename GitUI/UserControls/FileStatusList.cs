@@ -524,11 +524,11 @@ namespace GitUI
             }
 
             ListViewItem currentItem = FileStatusListView.Items[curIdx];
-            var currentGroup = currentItem.Group;
+            ListViewGroup currentGroup = currentItem.Group;
 
             if (searchBackward)
             {
-                var nextItem = FindPrevItemInGroups();
+                ListViewItem? nextItem = FindPrevItemInGroups();
                 if (nextItem is null)
                 {
                     return loop ? GetLastIndex() : curIdx;
@@ -538,10 +538,10 @@ namespace GitUI
             }
             else
             {
-                var nextItem = FindNextItemInGroups();
+                ListViewItem? nextItem = FindNextItemInGroups();
                 if (nextItem is null)
                 {
-                    return loop ? 0 : curIdx;
+                    return loop ? GetFirstIndex() : curIdx;
                 }
 
                 return nextItem.Index;
@@ -550,28 +550,29 @@ namespace GitUI
             ListViewItem? FindPrevItemInGroups()
             {
                 List<ListViewGroup> searchInGroups = new();
-                var foundCurrentGroup = false;
-                for (var i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
+                bool foundCurrentGroup = false;
+                for (int i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
                 {
                     if (FileStatusListView.Groups[i] == currentGroup)
                     {
                         foundCurrentGroup = true;
                     }
 
-                    if (foundCurrentGroup)
+                    if (foundCurrentGroup && ContainsSearchableItem(FileStatusListView.Groups[i]))
                     {
                         searchInGroups.Add(FileStatusListView.Groups[i]);
                     }
                 }
 
-                var idx = curIdx;
-                foreach (var grp in searchInGroups)
+                int idx = ContainsSearchableItem(currentGroup) ? curIdx : FileStatusListView.Items.Count;
+                foreach (ListViewGroup grp in searchInGroups)
                 {
-                    for (var i = idx - 1; i >= 0; i--)
+                    for (int i = idx - 1; i >= 0; i--)
                     {
-                        if (FileStatusListView.Items[i].Group == grp)
+                        ListViewItem item = FileStatusListView.Items[i];
+                        if (item.Group == grp && IsSearchableItem(item))
                         {
-                            return FileStatusListView.Items[i];
+                            return item;
                         }
                     }
 
@@ -584,28 +585,29 @@ namespace GitUI
             ListViewItem? FindNextItemInGroups()
             {
                 List<ListViewGroup> searchInGroups = new();
-                var foundCurrentGroup = false;
-                for (var i = 0; i < FileStatusListView.Groups.Count; i++)
+                bool foundCurrentGroup = false;
+                for (int i = 0; i < FileStatusListView.Groups.Count; i++)
                 {
                     if (FileStatusListView.Groups[i] == currentGroup)
                     {
                         foundCurrentGroup = true;
                     }
 
-                    if (foundCurrentGroup)
+                    if (foundCurrentGroup && ContainsSearchableItem(FileStatusListView.Groups[i]))
                     {
                         searchInGroups.Add(FileStatusListView.Groups[i]);
                     }
                 }
 
-                var idx = curIdx;
-                foreach (var grp in searchInGroups)
+                int idx = ContainsSearchableItem(currentGroup) ? curIdx : -1;
+                foreach (ListViewGroup grp in searchInGroups)
                 {
-                    for (var i = idx + 1; i < FileStatusListView.Items.Count; i++)
+                    for (int i = idx + 1; i < FileStatusListView.Items.Count; i++)
                     {
-                        if (FileStatusListView.Items[i].Group == grp)
+                        ListViewItem item = FileStatusListView.Items[i];
+                        if (item.Group == grp && IsSearchableItem(item))
                         {
-                            return FileStatusListView.Items[i];
+                            return item;
                         }
                     }
 
@@ -613,6 +615,40 @@ namespace GitUI
                 }
 
                 return null;
+            }
+
+            int GetFirstIndex()
+            {
+                if (FileStatusListView.Items.Count == 0)
+                {
+                    return -1;
+                }
+
+                if (FileStatusListView.Groups.Count < 2)
+                {
+                    return 0;
+                }
+
+                ListViewGroup? firstNonEmptyGroup = null;
+                foreach (ListViewGroup group in FileStatusListView.Groups)
+                {
+                    if (ContainsSearchableItem(group))
+                    {
+                        firstNonEmptyGroup = group;
+                        break;
+                    }
+                }
+
+                for (int i = 0; i < FileStatusListView.Items.Count; ++i)
+                {
+                    ListViewItem item = FileStatusListView.Items[i];
+                    if (item.Group == firstNonEmptyGroup && IsSearchableItem(item))
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
             }
 
             int GetLastIndex()
@@ -630,7 +666,7 @@ namespace GitUI
                 ListViewGroup? lastNonEmptyGroup = null;
                 for (int i = FileStatusListView.Groups.Count - 1; i >= 0; i--)
                 {
-                    if (FileStatusListView.Groups[i].Items.Count > 0)
+                    if (ContainsSearchableItem(FileStatusListView.Groups[i]))
                     {
                         lastNonEmptyGroup = FileStatusListView.Groups[i];
                         break;
@@ -639,13 +675,34 @@ namespace GitUI
 
                 for (int i = FileStatusListView.Items.Count - 1; i >= 0; i--)
                 {
-                    if (FileStatusListView.Items[i].Group == lastNonEmptyGroup)
+                    ListViewItem item = FileStatusListView.Items[i];
+                    if (item.Group == lastNonEmptyGroup && IsSearchableItem(item))
                     {
                         return i;
                     }
                 }
 
                 return -1;
+            }
+
+            static bool IsSearchableItem(ListViewItem item)
+            {
+                return item.Tag is FileStatusItem fileStatusItem
+                    && !fileStatusItem.Item.IsStatusOnly
+                    && !fileStatusItem.Item.IsRangeDiff;
+            }
+
+            static bool ContainsSearchableItem(ListViewGroup group)
+            {
+                foreach (ListViewItem item in group.Items)
+                {
+                    if (IsSearchableItem(item))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 
@@ -773,8 +830,20 @@ namespace GitUI
         public void SetSelectedIndex(int idx, bool notify)
         {
             _enableSelectedIndexChangeEvent = notify;
-            SelectedIndex = idx;
-            _enableSelectedIndexChangeEvent = true;
+            try
+            {
+                SelectedIndex = idx;
+
+                ListViewGroup? group = FileStatusListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Group;
+                if (group?.CollapsedState is ListViewGroupCollapsedState.Collapsed)
+                {
+                    group.CollapsedState = ListViewGroupCollapsedState.Expanded;
+                }
+            }
+            finally
+            {
+                _enableSelectedIndexChangeEvent = true;
+            }
         }
 
         public int SetSelectionFilter(string selectionFilter)
@@ -958,23 +1027,18 @@ namespace GitUI
             List<ListViewItem> list = new();
             foreach (var i in GitItemStatusesWithDescription)
             {
-                ListViewGroup? group = null;
-                if (i.FirstRev is not null)
+                string name = i.Statuses.Count == 1 && i.Statuses[0].IsRangeDiff
+                    ? i.Summary
+                    : $"({i.Statuses.Count}) {i.Summary}";
+                ListViewGroup group = new(name)
                 {
-                    string name = i.Statuses.Count == 1 && i.Statuses[0].IsRangeDiff
-                        ? i.Summary
-                        : $"({i.Statuses.Count}) {i.Summary}";
-                    group = new ListViewGroup(name)
-                    {
-                        // Collapse some groups for diffs with common BASE
-                        CollapsedState = i.Statuses.Count <= 7 || GitItemStatusesWithDescription.Count < 3 || i == GitItemStatusesWithDescription[0]
-                            ? ListViewGroupCollapsedState.Expanded
-                            : ListViewGroupCollapsedState.Collapsed,
-                        Tag = i.FirstRev
-                    };
-
-                    FileStatusListView.Groups.Add(group);
-                }
+                    // Collapse some groups for diffs with common BASE
+                    CollapsedState = i.Statuses.Count <= 7 || GitItemStatusesWithDescription.Count < 3 || i == GitItemStatusesWithDescription[0]
+                        ? ListViewGroupCollapsedState.Expanded
+                        : ListViewGroupCollapsedState.Collapsed,
+                    Tag = i.FirstRev
+                };
+                FileStatusListView.Groups.Add(group);
 
                 IReadOnlyList<GitItemStatus> itemStatuses;
                 if (hasChanges && i.Statuses.Count == 0)

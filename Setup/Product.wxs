@@ -15,7 +15,7 @@
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
     <Property Id="LAUNCH" Value="0" />
     <Property Id="TELEMETRY_ENABLED" Value="1" Secure="yes" />
-    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable"/>
+    <Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
     <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
     <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
@@ -161,8 +161,9 @@
       <Component Id="Microsoft.VisualStudio.Composition.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Microsoft.VisualStudio.Composition.dll" />
       </Component>
-      <Component Id="Microsoft.VisualStudio.Composition.NetFxAttributes.dll" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Microsoft.VisualStudio.Composition.NetFxAttributes.dll" />
+      <!-- Remove unused dll, installed in versions <= 4.0.1 -->
+      <Component Id="Microsoft.VisualStudio.Composition.NetFxAttributes.dll" Guid="D4782F6D-044B-5BD2-858A-1A3D8510B277">
+        <RemoveFile Name="Microsoft.VisualStudio.Composition.NetFxAttributes.dll" Id="Microsoft.VisualStudio.Composition.NetFxAttributes.dll" On="both" />
       </Component>
       <Component Id="Microsoft.VisualStudio.Interop.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Microsoft.VisualStudio.Interop.dll" />
@@ -227,7 +228,6 @@
       <Component Id="System.Reactive.Linq.dll" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\System.Reactive.Linq.dll" />
       </Component>
-
       <!-- Shell extensions -->
       <?define ShellExCLSID = "{3C16B20A-BA16-4156-916F-0A375ECFFE24}"?>
       <Component Id="GitExtensionsShellEx32.dll" Guid="*">
@@ -303,14 +303,11 @@
       <Component Id="Themes.invariant.css" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Themes\invariant.css" />
       </Component>
-      <Component Id="Themes.dark.css" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Themes\dark.css" />
-      </Component>
-      <Component Id="Themes.darksilver.css" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Themes\darksilver.css" />
-      </Component>
       <Component Id="Themes.bright.css" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Themes\bright.css" />
+      </Component>
+      <Component Id="Themes.highcontrast_dark.css" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Themes\highcontrast_dark.css" />
       </Component>
     </DirectoryRef>
     <DirectoryRef Id="PluginsDir">
@@ -364,16 +361,16 @@
         <File Source="$(var.ArtifactsPublishPath)\Plugins\GitExtensions.Plugins.Bitbucket.dll" />
       </Component>
       <Component Id="TeamCityIntegration.dll" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Plugins\TeamCityIntegration.dll" />
+        <File Source="$(var.ArtifactsPublishPath)\Plugins\GitExtensions.TeamCityIntegration.dll" />
       </Component>
       <Component Id="AppVeyorIntegration.dll" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Plugins\AppVeyorIntegration.dll" />
+        <File Source="$(var.ArtifactsPublishPath)\Plugins\GitExtensions.AppVeyorIntegration.dll" />
       </Component>
       <Component Id="JenkinsIntegration.dll" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Plugins\JenkinsIntegration.dll" />
+        <File Source="$(var.ArtifactsPublishPath)\Plugins\GitExtensions.JenkinsIntegration.dll" />
       </Component>
       <Component Id="AzureDevOpsIntegration.dll" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Plugins\AzureDevOpsIntegration.dll" />
+        <File Source="$(var.ArtifactsPublishPath)\Plugins\GitExtensions.AzureDevOpsIntegration.dll" />
       </Component>
     </DirectoryRef>
     <DirectoryRef Id="PluginManagerDir">
@@ -439,15 +436,6 @@
       </Component>
     </DirectoryRef>
     <DirectoryRef Id="TranslationsDir">
-      <Component Id="Dutch.gif" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Translation\Dutch.gif" />
-      </Component>
-      <Component Id="Dutch.xlf" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Translation\Dutch.xlf" />
-      </Component>
-      <Component Id="Dutch.Plugins.xlf" Guid="*">
-        <File Source="$(var.ArtifactsPublishPath)\Translation\Dutch.Plugins.xlf" />
-      </Component>
       <Component Id="English.gif" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Translation\English.gif" />
       </Component>
@@ -520,6 +508,15 @@
       <Component Id="SimplifiedChinese.Plugins.xlf" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Translation\Simplified Chinese.Plugins.xlf" />
       </Component>
+      <Component Id="Spanish_Argentina.gif" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Translation\Spanish (Argentina).gif" />
+      </Component>
+      <Component Id="Spanish_Argentina.xlf" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Translation\Spanish (Argentina).xlf" />
+      </Component>
+      <Component Id="Spanish_Argentina.Plugins.xlf" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Translation\Spanish (Argentina).Plugins.xlf" />
+      </Component>
       <Component Id="Spanish.gif" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Translation\Spanish.gif" />
       </Component>
@@ -528,6 +525,15 @@
       </Component>
       <Component Id="Spanish.Plugins.xlf" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Translation\Spanish.Plugins.xlf" />
+      </Component>
+      <Component Id="TraditionalChinese.gif" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Translation\Traditional Chinese.gif" />
+      </Component>
+      <Component Id="TraditionalChinese.xlf" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Translation\Traditional Chinese.xlf" />
+      </Component>
+      <Component Id="TraditionalChinese.Plugins.xlf" Guid="*">
+        <File Source="$(var.ArtifactsPublishPath)\Translation\Traditional Chinese.Plugins.xlf" />
       </Component>
       <Component Id="Turkish.gif" Guid="*">
         <File Source="$(var.ArtifactsPublishPath)\Translation\Turkish.gif" />
@@ -586,9 +592,8 @@
     <ComponentGroup Id="Component.Themes">
       <ComponentRef Id="Themes.README.md" />
       <ComponentRef Id="Themes.invariant.css" />
-      <ComponentRef Id="Themes.dark.css" />
-      <ComponentRef Id="Themes.darksilver.css" />
       <ComponentRef Id="Themes.bright.css" />
+      <ComponentRef Id="Themes.highcontrast_dark.css" />
     </ComponentGroup>
     <ComponentGroup Id="Component.Translation">
       <ComponentRef Id="English.gif" />
@@ -615,7 +620,6 @@
         <RemoveFolder Id="GitExtensions.desktop" On="uninstall" />
       </Component>
     </DirectoryRef>
-
     <Feature Id="GitExtensions" Title="Git Extensions" Level="1" Display="expand">
       <!-- Application build artifacts -->
       <ComponentGroupRef Id="Component.ConEmuFiles" />
@@ -797,11 +801,6 @@
         </Feature>
       </Feature>
       <Feature Id="Translation" Title="Translations" Level="1">
-        <Feature Id="Dutch" Title="Dutch" Level="1">
-          <ComponentRef Id="Dutch.xlf" />
-          <ComponentRef Id="Dutch.Plugins.xlf" />
-          <ComponentRef Id="Dutch.gif" />
-        </Feature>
         <Feature Id="French" Title="French" Level="1">
           <ComponentRef Id="French.xlf" />
           <ComponentRef Id="French.Plugins.xlf" />
@@ -837,10 +836,20 @@
           <ComponentRef Id="SimplifiedChinese.Plugins.xlf" />
           <ComponentRef Id="SimplifiedChinese.gif" />
         </Feature>
+        <Feature Id="Spanish_Argentina" Title="Spanish (Argentina)" Level="1">
+          <ComponentRef Id="Spanish_Argentina.xlf" />
+          <ComponentRef Id="Spanish_Argentina.Plugins.xlf" />
+          <ComponentRef Id="Spanish_Argentina.gif" />
+        </Feature>
         <Feature Id="Spanish" Title="Spanish" Level="1">
           <ComponentRef Id="Spanish.xlf" />
           <ComponentRef Id="Spanish.Plugins.xlf" />
           <ComponentRef Id="Spanish.gif" />
+        </Feature>
+        <Feature Id="TraditionalChinese" Title="Traditional Chinese" Level="1">
+          <ComponentRef Id="TraditionalChinese.xlf" />
+          <ComponentRef Id="TraditionalChinese.Plugins.xlf" />
+          <ComponentRef Id="TraditionalChinese.gif" />
         </Feature>
         <Feature Id="Turkish" Title="Turkish" Level="1">
           <ComponentRef Id="Turkish.xlf" />

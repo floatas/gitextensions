@@ -11,12 +11,18 @@ namespace GitUITests.UserControls
     [SetCulture("en-US")]
     [SetUICulture("en-US")]
     [TestFixture]
+    [NonParallelizable]
     public class FilterInfoTests
     {
         [SetUp]
         public void SetUp()
         {
             AppSettings.ShowGitNotes = false;
+            AppSettings.ShowMergeCommits = true;
+            AppSettings.ShowOnlyFirstParent = false;
+            AppSettings.ShowSimplifyByDecoration = false;
+            AppSettings.SimplifyMergesInFileHistory = false;
+            AppSettings.MaxRevisionGraphCommits = 0;
         }
 
         [Test]
@@ -28,6 +34,7 @@ namespace GitUITests.UserControls
             AppSettings.ShowReflogReferences = false;
             AppSettings.ShowCurrentBranchOnly = false;
             AppSettings.BranchFilterEnabled = false;
+            AppSettings.MaxRevisionGraphCommits = 1;
 
             try
             {
@@ -51,6 +58,7 @@ namespace GitUITests.UserControls
             AppSettings.ShowReflogReferences = false;
             AppSettings.ShowCurrentBranchOnly = false;
             AppSettings.BranchFilterEnabled = false;
+            AppSettings.MaxRevisionGraphCommits = 1;
 
             try
             {
@@ -70,12 +78,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByDateFrom.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByDateFrom = true;
             filterInfo.ByDateFrom.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeTrue();
 
             filterInfo.ByDateFrom = false;
             filterInfo.ByDateFrom.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -108,12 +119,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByDateTo.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByDateTo = true;
             filterInfo.ByDateTo.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeTrue();
 
             filterInfo.ByDateTo = false;
             filterInfo.ByDateTo.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -146,12 +160,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByAuthor.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByAuthor = true;
             filterInfo.ByAuthor.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeTrue();
 
             filterInfo.ByAuthor = false;
             filterInfo.ByAuthor.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -183,12 +200,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByCommitter.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByCommitter = true;
             filterInfo.ByCommitter.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeTrue();
 
             filterInfo.ByCommitter = false;
             filterInfo.ByCommitter.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -220,12 +240,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByMessage.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByMessage = true;
             filterInfo.ByMessage.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeTrue();
 
             filterInfo.ByMessage = false;
             filterInfo.ByMessage.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -257,12 +280,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByDiffContent.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByDiffContent = true;
             filterInfo.ByDiffContent.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeTrue();
 
             filterInfo.ByDiffContent = false;
             filterInfo.ByDiffContent.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -294,23 +320,34 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.IgnoreCase.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.IgnoreCase = false;
             filterInfo.IgnoreCase.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.IgnoreCase = true;
             filterInfo.IgnoreCase.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [Test]
         public void FilterInfo_HasCommitsLimit_expected()
         {
+            AppSettings.MaxRevisionGraphCommits = 1;
             FilterInfo filterInfo = new() { IsRaw = true };
             filterInfo.HasCommitsLimit.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeFalse();
 
+            AppSettings.MaxRevisionGraphCommits = 0;
             filterInfo.ByCommitsLimit = true;
             filterInfo.CommitsLimit = 0;
             filterInfo.HasCommitsLimit.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
+
+            filterInfo.CommitsLimit = 1;
+            filterInfo.HasCommitsLimit.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [Test]
@@ -318,12 +355,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByCommitsLimit.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByCommitsLimit = true;
             filterInfo.ByCommitsLimit.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByCommitsLimit = false;
             filterInfo.ByCommitsLimit.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(0, false)]
@@ -355,12 +395,15 @@ namespace GitUITests.UserControls
         {
             FilterInfo filterInfo = new();
             filterInfo.ByPathFilter.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByPathFilter = true;
             filterInfo.ByPathFilter.Should().BeTrue();
+            filterInfo.HasFilter.Should().BeFalse();
 
             filterInfo.ByPathFilter = false;
             filterInfo.ByPathFilter.Should().BeFalse();
+            filterInfo.HasFilter.Should().BeFalse();
         }
 
         [TestCase(false, false)]
@@ -402,17 +445,21 @@ namespace GitUITests.UserControls
                 FilterInfo filterInfo = new();
                 filterInfo.ByBranchFilter.Should().BeFalse();
                 AppSettings.BranchFilterEnabled.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ByBranchFilter = true;
                 filterInfo.ByBranchFilter.Should().BeTrue();
                 AppSettings.BranchFilterEnabled.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ByBranchFilter = false;
                 filterInfo.ByBranchFilter.Should().BeFalse();
                 AppSettings.BranchFilterEnabled.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 AppSettings.BranchFilterEnabled = true;
                 filterInfo.ByBranchFilter.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -485,6 +532,7 @@ namespace GitUITests.UserControls
                 };
 
                 filterInfo.IsShowAllBranchesChecked.Should().Be(expected);
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -517,6 +565,7 @@ namespace GitUITests.UserControls
                 };
 
                 filterInfo.IsShowCurrentBranchOnlyChecked.Should().Be(expected);
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -549,6 +598,7 @@ namespace GitUITests.UserControls
                 };
 
                 filterInfo.IsShowFilteredBranchesChecked.Should().Be(expected);
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -573,17 +623,21 @@ namespace GitUITests.UserControls
                 FilterInfo filterInfo = new();
                 filterInfo.ShowCurrentBranchOnly.Should().BeFalse();
                 AppSettings.ShowCurrentBranchOnly.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ShowCurrentBranchOnly = true;
                 filterInfo.ShowCurrentBranchOnly.Should().BeTrue();
                 AppSettings.ShowCurrentBranchOnly.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ShowCurrentBranchOnly = false;
                 filterInfo.ShowCurrentBranchOnly.Should().BeFalse();
                 AppSettings.ShowCurrentBranchOnly.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 AppSettings.ShowCurrentBranchOnly = true;
                 filterInfo.ShowCurrentBranchOnly.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -604,17 +658,21 @@ namespace GitUITests.UserControls
                 FilterInfo filterInfo = new();
                 filterInfo.ShowOnlyFirstParent.Should().BeFalse();
                 AppSettings.ShowOnlyFirstParent.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ShowOnlyFirstParent = true;
                 filterInfo.ShowOnlyFirstParent.Should().BeTrue();
                 AppSettings.ShowOnlyFirstParent.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeTrue();
 
                 filterInfo.ShowOnlyFirstParent = false;
                 filterInfo.ShowOnlyFirstParent.Should().BeFalse();
                 AppSettings.ShowOnlyFirstParent.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 AppSettings.ShowOnlyFirstParent = true;
                 filterInfo.ShowOnlyFirstParent.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeTrue();
             }
             finally
             {
@@ -637,17 +695,21 @@ namespace GitUITests.UserControls
                 FilterInfo filterInfo = new();
                 filterInfo.ShowReflogReferences.Should().BeFalse();
                 AppSettings.ShowReflogReferences.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ShowReflogReferences = true;
                 filterInfo.ShowReflogReferences.Should().BeTrue();
                 AppSettings.ShowReflogReferences.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ShowReflogReferences = false;
                 filterInfo.ShowReflogReferences.Should().BeFalse();
                 AppSettings.ShowReflogReferences.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 AppSettings.ShowReflogReferences = true;
                 filterInfo.ShowReflogReferences.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -684,6 +746,7 @@ namespace GitUITests.UserControls
                 };
 
                 filterInfo.ShowReflogReferences.Should().Be(showReflog);
+                filterInfo.HasFilter.Should().BeFalse();
 
                 // showCurrentBranchOnly dominates byBranchFilter
                 filterInfo.IsShowAllBranchesChecked.Should().Be(!byBranchFilter && !showCurrentBranchOnly && !showReflog);
@@ -694,6 +757,8 @@ namespace GitUITests.UserControls
                 AppSettings.BranchFilterEnabled.Should().Be(byBranchFilter);
                 filterInfo.ShowCurrentBranchOnly.Should().Be(showCurrentBranchOnly);
                 AppSettings.ShowCurrentBranchOnly.Should().Be(showCurrentBranchOnly);
+
+                filterInfo.HasFilter.Should().BeFalse();
             }
             finally
             {
@@ -715,17 +780,21 @@ namespace GitUITests.UserControls
                 FilterInfo filterInfo = new();
                 filterInfo.ShowSimplifyByDecoration.Should().BeFalse();
                 AppSettings.ShowSimplifyByDecoration.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 filterInfo.ShowSimplifyByDecoration = true;
                 filterInfo.ShowSimplifyByDecoration.Should().BeTrue();
                 AppSettings.ShowSimplifyByDecoration.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeTrue();
 
                 filterInfo.ShowSimplifyByDecoration = false;
                 filterInfo.ShowSimplifyByDecoration.Should().BeFalse();
                 AppSettings.ShowSimplifyByDecoration.Should().BeFalse();
+                filterInfo.HasFilter.Should().BeFalse();
 
                 AppSettings.ShowSimplifyByDecoration = true;
                 filterInfo.ShowSimplifyByDecoration.Should().BeTrue();
+                filterInfo.HasFilter.Should().BeTrue();
             }
             finally
             {
@@ -757,9 +826,12 @@ namespace GitUITests.UserControls
                                                 {
                                                     foreach (bool showCurrentBranchOnly in new[] { false, true })
                                                     {
-                                                        foreach (string branchFilter in new[] { "branch1", "", null })
+                                                        foreach (bool showReflogReferences in new[] { false, true })
                                                         {
-                                                            yield return new TestCaseData(byDateFrom, byDateTo, byAuthor, byCommitter, byMessage, byDiffContent, showSimplifyByDecoration, showMergeCommits, pathFilter, showCurrentBranchOnly, branchFilter);
+                                                            foreach (string branchFilter in new[] { "branch1", "", null })
+                                                            {
+                                                                yield return new TestCaseData(byDateFrom, byDateTo, byAuthor, byCommitter, byMessage, byDiffContent, showSimplifyByDecoration, showMergeCommits, pathFilter, showCurrentBranchOnly, showReflogReferences, branchFilter);
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -775,7 +847,7 @@ namespace GitUITests.UserControls
         }
 
         [TestCaseSource(nameof(FilterInfo_HasFilterTestCases))]
-        public void FilterInfo_HasFilter_expected(bool byDateFrom, bool byDateTo, bool byAuthor, bool byCommitter, bool byMessage, bool byDiffContent, bool showSimplifyByDecoration, bool showMergeCommits, string pathFilter, bool showCurrentBranchOnly, string branchFilter)
+        public void FilterInfo_HasFilter_expected(bool byDateFrom, bool byDateTo, bool byAuthor, bool byCommitter, bool byMessage, bool byDiffContent, bool showSimplifyByDecoration, bool showMergeCommits, string pathFilter, bool showCurrentBranchOnly, bool showReflogReferences, string branchFilter)
         {
             FilterInfo filterInfo = new()
             {
@@ -790,15 +862,16 @@ namespace GitUITests.UserControls
                 ByPathFilter = true,
                 PathFilter = pathFilter,
                 ShowCurrentBranchOnly = showCurrentBranchOnly,
+                ShowReflogReferences = showReflogReferences,
                 ByBranchFilter = true,
                 BranchFilter = branchFilter
             };
 
-            filterInfo.HasFilter.Should().Be(byDateFrom || byDateTo || byAuthor || byCommitter || byMessage || byDiffContent || showSimplifyByDecoration || !showMergeCommits || !string.IsNullOrWhiteSpace(pathFilter) || showCurrentBranchOnly || !string.IsNullOrWhiteSpace(branchFilter));
+            filterInfo.HasFilter.Should().Be(byDateFrom || byDateTo || byAuthor || byCommitter || byMessage || byDiffContent || showSimplifyByDecoration || !showMergeCommits || !string.IsNullOrWhiteSpace(pathFilter) || !string.IsNullOrWhiteSpace(branchFilter));
         }
 
         [TestCaseSource(nameof(FilterInfo_HasFilterTestCases))]
-        public void FilterInfo_ResetAllFilters_expected(bool byDateFrom, bool byDateTo, bool byAuthor, bool byCommitter, bool byMessage, bool byDiffContent, bool showSimplifyByDecoration, bool showMergeCommits, string pathFilter, bool showCurrentBranchOnly, string branchFilter)
+        public void FilterInfo_ResetAllFilters_expected(bool byDateFrom, bool byDateTo, bool byAuthor, bool byCommitter, bool byMessage, bool byDiffContent, bool showSimplifyByDecoration, bool showMergeCommits, string pathFilter, bool showCurrentBranchOnly, bool showReflogReferences, string branchFilter)
         {
             FilterInfo filterInfo = new()
             {
@@ -813,6 +886,7 @@ namespace GitUITests.UserControls
                 ByPathFilter = true,
                 PathFilter = pathFilter,
                 ShowCurrentBranchOnly = showCurrentBranchOnly,
+                ShowReflogReferences = showReflogReferences,
                 ByBranchFilter = true,
                 BranchFilter = branchFilter
             };
@@ -828,8 +902,10 @@ namespace GitUITests.UserControls
             filterInfo.ShowSimplifyByDecoration.Should().BeFalse();
             filterInfo.ShowMergeCommits.Should().BeTrue();
             filterInfo.ByPathFilter.Should().BeFalse();
-            filterInfo.ShowCurrentBranchOnly.Should().BeFalse();
             filterInfo.ByBranchFilter.Should().BeFalse();
+
+            filterInfo.IsShowCurrentBranchOnlyChecked.Should().Be(showCurrentBranchOnly && !showReflogReferences);
+            filterInfo.ShowReflogReferences.Should().Be(showReflogReferences);
         }
 
         [TestCase("author1", "committer2", "message3", "diffContent4", true, false, "pathFilter7", false, false, "branchFilter8",
@@ -837,6 +913,7 @@ namespace GitUITests.UserControls
             @"--max-count=100000 --since=""2021-10-01 01:30:34"" --until=""2021-11-01 01:30:34"" --no-merges --simplify-by-decoration --author=""author1"" --committer=""committer2"" --regexp-ignore-case -G""diffContent4"" --grep=""message3"" --parents --glob=refs/stas[h] branchFilter8")]
         public void FilterInfo_GetRevisionFilter(string author, string committer, string message, string diffContent, bool showSimplifyByDecoration, bool showMergeCommits, string pathFilter, bool showReflog, bool showCurrentBranchOnly, string branchFilter, string expectedSummary, string expectedArgs)
         {
+            AppSettings.MaxRevisionGraphCommits = 100000;
             DateTime dateFrom = new(2021, 10, 1, 1, 30, 34, DateTimeKind.Local);
             DateTime dateTo = new(2021, 11, 1, 1, 30, 34, DateTimeKind.Local);
             FilterInfo filterInfo = new()
@@ -864,7 +941,7 @@ namespace GitUITests.UserControls
             };
 
             filterInfo.GetSummary().Should().Be(expectedSummary);
-            filterInfo.GetRevisionFilter().ToString().Should().Be(expectedArgs);
+            filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch")).ToString().Should().Be(expectedArgs);
         }
 
         [TestCase(false, false, "branchFilter")]
@@ -885,7 +962,7 @@ namespace GitUITests.UserControls
                 BranchFilter = branchFilter
             };
 
-            string args = filterInfo.GetRevisionFilter();
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch"));
 
             if (showRefLog)
             {
@@ -922,7 +999,7 @@ namespace GitUITests.UserControls
                 BranchFilter = branchFilter
             };
 
-            string args = filterInfo.GetRevisionFilter();
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch"));
 
             if (expectBranches)
             {
@@ -944,7 +1021,7 @@ namespace GitUITests.UserControls
                 CommitsLimit = maxCount,
                 ByCommitsLimit = true
             };
-            string args = filterInfo.GetRevisionFilter();
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch"));
 
             if (expected)
             {
@@ -965,7 +1042,7 @@ namespace GitUITests.UserControls
                 ShowOnlyFirstParent = expected
             };
 
-            string args = filterInfo.GetRevisionFilter();
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch"));
 
             if (expected)
             {
@@ -986,7 +1063,7 @@ namespace GitUITests.UserControls
                 ShowMergeCommits = expected
             };
 
-            string args = filterInfo.GetRevisionFilter();
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch"));
 
             if (!expected)
             {
@@ -1012,7 +1089,10 @@ namespace GitUITests.UserControls
                             {
                                 foreach (string branchFilter in new[] { "branch1", "", null })
                                 {
-                                    yield return new TestCaseData(showNotes, showStash, showReflog, showCurrentBranchOnly, branchFilter);
+                                    foreach (string currentBranch in new[] { "currentBranch", "" })
+                                    {
+                                        yield return new TestCaseData(showNotes, showStash, showReflog, showCurrentBranchOnly, branchFilter, currentBranch);
+                                    }
                                 }
                             }
                         }
@@ -1022,7 +1102,7 @@ namespace GitUITests.UserControls
         }
 
         [TestCaseSource(nameof(FilterInfo_NotesStash))]
-        public void FilterInfo_GitNotes_Stashes(bool showGitNotes, bool showStash, bool showReflog, bool showCurrentBranchOnly, string branchFilter)
+        public void FilterInfo_GitNotes_Stashes(bool showGitNotes, bool showStash, bool showReflog, bool showCurrentBranchOnly, string branchFilter, string currentBranch)
         {
             bool originalShowGitNotes = AppSettings.ShowGitNotes;
             AppSettings.ShowGitNotes = showGitNotes;
@@ -1035,10 +1115,11 @@ namespace GitUITests.UserControls
                 ByBranchFilter = true,
                 BranchFilter = branchFilter
             };
-            string args = filterInfo.GetRevisionFilter();
-            bool showAll = !showReflog && !showCurrentBranchOnly && string.IsNullOrWhiteSpace(branchFilter);
-            bool showCurrent = !showReflog && showCurrentBranchOnly;
-            bool showFiltredOrCurrent = !showReflog && (showCurrentBranchOnly || !string.IsNullOrWhiteSpace(branchFilter));
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => currentBranch));
+            bool showAll = (!showReflog && !showCurrentBranchOnly && string.IsNullOrWhiteSpace(branchFilter))
+                || (!showReflog && showCurrentBranchOnly && string.IsNullOrWhiteSpace(currentBranch));
+            bool showCurrent = !showReflog && showCurrentBranchOnly && !string.IsNullOrWhiteSpace(currentBranch);
+            bool showFiltredOrCurrent = !showReflog && (showCurrent || (!showCurrentBranchOnly && !string.IsNullOrWhiteSpace(branchFilter)));
 
             try
             {
@@ -1060,16 +1141,17 @@ namespace GitUITests.UserControls
                     args.ToString().Should().NotMatchRegex(@"(^|\s)--exclude=refs/stash($|\s)");
                 }
 
-                if (showCurrent && showStash)
+                string branch = Regex.Escape($"--branches={GetFilterRefName(currentBranch)}");
+                if (showCurrent)
                 {
-                    args.ToString().Should().MatchRegex(@"(^|\s)HEAD($|\s)");
+                    args.ToString().Should().MatchRegex(@$"(^|\s){branch}($|\s)");
                 }
-                else
+                else if (!string.IsNullOrWhiteSpace(branch))
                 {
-                    args.ToString().Should().NotMatchRegex(@"(^|\s)HEAD($|\s)");
+                    args.ToString().Should().NotMatchRegex(@$"(^|\s){branch}($|\s)");
                 }
 
-                string stash = Regex.Escape("--glob=refs/stas[h]");
+                string stash = Regex.Escape($"--glob={"refs/stas[h]"}");
                 if (showFiltredOrCurrent && showStash)
                 {
                     args.ToString().Should().MatchRegex(@$"(^|\s){stash}($|\s)");
@@ -1083,6 +1165,19 @@ namespace GitUITests.UserControls
             {
                 AppSettings.ShowGitNotes = originalShowGitNotes;
                 AppSettings.ShowStashes = originalShowStash;
+            }
+
+            return;
+
+            // return a refname that matches the name but that is not expanded with a a "/*"
+            string GetFilterRefName(string gitRef)
+            {
+                if (string.IsNullOrWhiteSpace(gitRef))
+                {
+                    return "";
+                }
+
+                return $"{gitRef.Substring(0, gitRef.Length - 1)}[{gitRef[^1]}]";
             }
         }
 
@@ -1102,7 +1197,7 @@ namespace GitUITests.UserControls
                 Message = message,
                 ByMessage = true
             };
-            string args = filterInfo.GetRevisionFilter();
+            string args = filterInfo.GetRevisionFilter(new Lazy<string>(() => "currentBranch"));
             string summary = filterInfo.GetSummary();
 
             if (expectGrep)
@@ -1132,6 +1227,8 @@ namespace GitUITests.UserControls
             filterInfo.ByAuthor.Should().BeFalse();
             filterInfo.ByCommitter.Should().BeFalse();
             filterInfo.ByDiffContent.Should().BeFalse();
+
+            filterInfo.HasFilter.Should().BeTrue();
         }
 
         [Test]
@@ -1147,6 +1244,8 @@ namespace GitUITests.UserControls
             filterInfo.ByMessage.Should().BeFalse();
             filterInfo.ByAuthor.Should().BeFalse();
             filterInfo.ByDiffContent.Should().BeFalse();
+
+            filterInfo.HasFilter.Should().BeTrue();
         }
 
         [Test]
@@ -1162,6 +1261,8 @@ namespace GitUITests.UserControls
             filterInfo.ByMessage.Should().BeFalse();
             filterInfo.ByCommitter.Should().BeFalse();
             filterInfo.ByDiffContent.Should().BeFalse();
+
+            filterInfo.HasFilter.Should().BeTrue();
         }
 
         [Test]
@@ -1177,6 +1278,8 @@ namespace GitUITests.UserControls
             filterInfo.ByMessage.Should().BeFalse();
             filterInfo.ByAuthor.Should().BeFalse();
             filterInfo.ByCommitter.Should().BeFalse();
+
+            filterInfo.HasFilter.Should().BeTrue();
         }
 
         [Test]
@@ -1196,6 +1299,8 @@ namespace GitUITests.UserControls
             filterInfo.ByCommitter.Should().BeFalse();
             filterInfo.ByDiffContent.Should().BeFalse();
 
+            filterInfo.HasFilter.Should().BeTrue();
+
             filterLaunched = filterInfo.Apply(new RevisionFilter("a_content", byCommit: true, byCommitter: false, byAuthor: false, byDiffContent: true));
 
             filterLaunched.Should().BeTrue();
@@ -1207,6 +1312,8 @@ namespace GitUITests.UserControls
             filterInfo.ByAuthor.Should().BeFalse();
             filterInfo.ByCommitter.Should().BeFalse();
 
+            filterInfo.HasFilter.Should().BeTrue();
+
             filterLaunched = filterInfo.Apply(new RevisionFilter("a_content", byCommit: false, byCommitter: false, byAuthor: false, byDiffContent: true));
 
             filterLaunched.Should().BeTrue();
@@ -1216,6 +1323,8 @@ namespace GitUITests.UserControls
             filterInfo.ByMessage.Should().BeFalse();
             filterInfo.ByAuthor.Should().BeFalse();
             filterInfo.ByCommitter.Should().BeFalse();
+
+            filterInfo.HasFilter.Should().BeTrue();
         }
     }
 }

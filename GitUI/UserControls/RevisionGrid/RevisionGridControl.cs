@@ -847,7 +847,7 @@ namespace GitUI
         /// <summary>
         ///  Queries git for the new set of revisions and refreshes the grid.
         /// </summary>
-        /// <exception cref="AggregateException"></exception>
+        /// <exception cref="Exception"></exception>
         /// <param name="forceRefresh">Refresh may be required as references may be changed.</param>
         public void PerformRefreshRevisions(Func<RefsFilter, IReadOnlyList<IGitRef>> getRefs = null, bool forceRefresh = false)
         {
@@ -1048,7 +1048,7 @@ namespace GitUI
                     cancellationToken.ThrowIfCancellationRequested();
                     reader.GetLog(
                         observeRevisions,
-                        _filterInfo.GetRevisionFilter(),
+                        _filterInfo.GetRevisionFilter(CurrentBranch),
                         pathFilter,
                         cancellationToken);
                 }).FileAndForget(
@@ -1313,7 +1313,7 @@ namespace GitUI
                 _isRefreshingRevisions = false;
 
                 // Rethrow the exception on the UI thread
-                this.InvokeAsync(() => throw new AggregateException(exception))
+                this.InvokeAsync(() => throw exception)
                     .FileAndForget();
             }
 
@@ -1996,6 +1996,7 @@ namespace GitUI
             SetEnabled(revertCommitToolStripMenuItem, !bareRepositoryOrArtificial);
             SetEnabled(cherryPickCommitToolStripMenuItem, !bareRepositoryOrArtificial);
             SetEnabled(manipulateCommitToolStripMenuItem, !bareRepositoryOrArtificial);
+            SetEnabled(amendCommitToolStripMenuItem, !bareRepositoryOrArtificial && Module.GitVersion.SupportAmendCommits);
 
             SetEnabled(copyToClipboardToolStripMenuItem, !revision.IsArtificial);
             SetEnabled(createNewBranchToolStripMenuItem, !bareRepositoryOrArtificial);
@@ -2344,6 +2345,16 @@ namespace GitUI
             }
 
             UICommands.StartSquashCommitDialog(ParentForm, LatestSelectedRevision);
+        }
+
+        private void AmendCommitToolStripMenuItemClick(object sender, EventArgs e)
+        {
+            if (LatestSelectedRevision is null)
+            {
+                return;
+            }
+
+            UICommands.StartAmendCommitDialog(ParentForm, LatestSelectedRevision);
         }
 
         internal void ToggleShowRelativeDate(EventArgs e)
@@ -2747,6 +2758,8 @@ namespace GitUI
         internal void SetShortcutKeys()
         {
             SetShortcutString(fixupCommitToolStripMenuItem, Command.CreateFixupCommit);
+            SetShortcutString(squashCommitToolStripMenuItem, Command.CreateSquashCommit);
+            SetShortcutString(amendCommitToolStripMenuItem, Command.CreateAmendCommit);
             SetShortcutString(selectAsBaseToolStripMenuItem, Command.SelectAsBaseToCompare);
             SetShortcutString(openCommitsWithDiffToolMenuItem, Command.OpenCommitsWithDifftool);
             SetShortcutString(compareToBaseToolStripMenuItem, Command.CompareToBase);
@@ -3029,6 +3042,8 @@ namespace GitUI
                 case Command.SelectAsBaseToCompare: selectAsBaseToolStripMenuItem_Click(this, EventArgs.Empty); break;
                 case Command.CompareToBase: compareToBaseToolStripMenuItem_Click(this, EventArgs.Empty); break;
                 case Command.CreateFixupCommit: FixupCommitToolStripMenuItemClick(this, EventArgs.Empty); break;
+                case Command.CreateSquashCommit: SquashCommitToolStripMenuItemClick(this, EventArgs.Empty); break;
+                case Command.CreateAmendCommit: AmendCommitToolStripMenuItemClick(this, EventArgs.Empty); break;
                 case Command.OpenCommitsWithDifftool: DiffSelectedCommitsWithDifftool(); break;
                 case Command.CompareToWorkingDirectory: compareToWorkingDirectoryMenuItem_Click(this, EventArgs.Empty); break;
                 case Command.CompareToCurrentBranch: CompareWithCurrentBranchToolStripMenuItem_Click(this, EventArgs.Empty); break;

@@ -255,7 +255,7 @@ namespace GitUI.Hotkey
                 new HotkeySettings(
                     FormBrowse.HotkeySettingsName,
                     Hk(FormBrowse.Command.AddNotes, Keys.Control | Keys.Shift | Keys.N),
-                    Hk(FormBrowse.Command.CheckoutBranch, Keys.Control | Keys.Decimal),
+                    Hk(FormBrowse.Command.CheckoutBranch, Keys.Control | Keys.OemPeriod),
                     Hk(FormBrowse.Command.CloseRepository, Keys.Control | Keys.W),
                     Hk(FormBrowse.Command.Commit, Keys.Control | Keys.Space),
                     Hk(FormBrowse.Command.CreateBranch, Keys.Control | Keys.B),
@@ -314,7 +314,9 @@ namespace GitUI.Hotkey
                     Hk(RevisionGridControl.Command.CompareToBranch, Keys.None),
                     Hk(RevisionGridControl.Command.CompareToCurrentBranch, Keys.None),
                     Hk(RevisionGridControl.Command.CompareToWorkingDirectory, Keys.Control | Keys.D),
+                    Hk(RevisionGridControl.Command.CreateAmendCommit, Keys.None),
                     Hk(RevisionGridControl.Command.CreateFixupCommit, Keys.Control | Keys.X),
+                    Hk(RevisionGridControl.Command.CreateSquashCommit, Keys.None),
                     Hk(RevisionGridControl.Command.DeleteRef, Keys.Delete),
                     Hk(RevisionGridControl.Command.GoToChild, Keys.Control | Keys.N),
                     Hk(RevisionGridControl.Command.GoToCommit, Keys.Control | Keys.Shift | Keys.G),

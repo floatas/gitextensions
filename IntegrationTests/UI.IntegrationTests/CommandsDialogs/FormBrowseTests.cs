@@ -63,29 +63,6 @@ namespace GitExtensions.UITests.CommandsDialogs
             ManagedExtensibility.SetTestExportProvider(mefExportProvider);
         }
 
-        [Test]
-        public void PopulateFavouriteRepositoriesMenu_should_order_favourites_alphabetically()
-        {
-            RunFormTest(
-                form =>
-                {
-                    ToolStripMenuItem tsmiFavouriteRepositories = new();
-                    List<Repository> repositoryHistory = new()
-                    {
-                        new Repository(@"c:\") { Category = "D" },
-                        new Repository(@"c:\") { Category = "A" },
-                        new Repository(@"c:\") { Category = "C" },
-                        new Repository(@"c:\") { Category = "B" }
-                    };
-
-                    form.GetTestAccessor().PopulateFavouriteRepositoriesMenu(tsmiFavouriteRepositories, repositoryHistory);
-
-                    // assert
-                    var categories = tsmiFavouriteRepositories.DropDownItems.Cast<ToolStripMenuItem>().Select(x => x.Text).ToList();
-                    categories.Should().BeInAscendingOrder();
-                });
-        }
-
 #if !DEBUG
         [Ignore("This test is unstable in AppVeyor")]
 #endif
@@ -169,9 +146,11 @@ namespace GitExtensions.UITests.CommandsDialogs
                         using ReferenceRepository repository = new();
                         form.SetWorkingDir(repository.Module.WorkingDir);
                         WaitForRevisionsToBeLoaded(form);
+                        form.RevisionGridControl.Invalidate();
+                        UITest.ProcessEventsFor(1000);
                         // Assert
                         AppSettings.BranchFilterEnabled.Should().BeFalse();
-                        AppSettings.ShowCurrentBranchOnly.Should().BeFalse();
+                        AppSettings.ShowCurrentBranchOnly.Should().BeTrue();
                         form.GetTestAccessor().ToolStripFilters.GetTestAccessor().tscboBranchFilter.Text.Should().BeEmpty();
                     }
                     finally
@@ -180,6 +159,44 @@ namespace GitExtensions.UITests.CommandsDialogs
                         AppSettings.BranchFilterEnabled = branchFilterEnabled;
                         AppSettings.ShowCurrentBranchOnly = showCurrentBranchOnly;
                         AppSettings.RevisionGraphShowArtificialCommits = revisionGraphShowArtificialCommits;
+                    }
+                });
+        }
+
+        [TestCase("", "file.txt")]
+        [TestCase("", "file with spaces.txt")]
+        [TestCase("Dir with spaces", "file.txt")]
+        [TestCase("Dir with spaces", "file with spaces.txt")]
+        public void File_history_should_behave_as_expected(string fileRelativePath, string fileName)
+        {
+            using ReferenceRepository referenceRepository = new();
+            GitUICommands commands = new(referenceRepository.Module);
+
+            string revision1 = referenceRepository.CreateCommitRelative(fileRelativePath, fileName, $"Create '{fileName}' in directory '{fileRelativePath}'");
+            string revision2 = referenceRepository.CreateCommitRelative(fileRelativePath, fileName, $"Update '{fileName}' in directory '{fileRelativePath}'");
+            string revision3 = referenceRepository.CreateCommitRelative(fileRelativePath, fileName, $"Update '{fileName}' in directory '{fileRelativePath}' again");
+
+            bool useBrowseForFileHistory = AppSettings.UseBrowseForFileHistory.Value;
+
+            AppSettings.UseBrowseForFileHistory.Value = true;
+
+            UITest.RunForm(
+                showForm: () => commands.GetTestAccessor().ShowFileHistoryDialog(Path.Combine(fileRelativePath, fileName)),
+                (FormBrowse form) =>
+                {
+                    try
+                    {
+                        WaitForRevisionsToBeLoaded(form);
+
+                        form.GetTestAccessor().RevisionGrid.GetRevision(ObjectId.Parse(revision1)).Should().NotBeNull();
+                        form.GetTestAccessor().RevisionGrid.GetRevision(ObjectId.Parse(revision2)).Should().NotBeNull();
+                        form.GetTestAccessor().RevisionGrid.GetRevision(ObjectId.Parse(revision3)).Should().NotBeNull();
+
+                        return Task.CompletedTask;
+                    }
+                    finally
+                    {
+                        AppSettings.UseBrowseForFileHistory.Value = useBrowseForFileHistory;
                     }
                 });
         }
@@ -201,6 +218,7 @@ namespace GitExtensions.UITests.CommandsDialogs
 
             AppSettings.ShowStashes = false;
             AppSettings.RevisionGraphShowArtificialCommits = false;
+
             RunFormTest(
                 form =>
                 {
@@ -217,6 +235,8 @@ namespace GitExtensions.UITests.CommandsDialogs
                         Console.WriteLine("Scenario 1: change 'Show stashes' to enabled");
                         form.GetTestAccessor().RevisionGrid.ToggleShowStashes();
                         WaitForRevisionsToBeLoaded(form);
+                        form.RevisionGridControl.Invalidate();
+                        UITest.ProcessEventsFor(1000);
                         // Assert
                         AppSettings.ShowStashes.Should().BeTrue();
                         form.GetTestAccessor().RevisionGrid.GetTestAccessor().VisibleRevisionCount.Should().Be(7);
@@ -263,6 +283,8 @@ namespace GitExtensions.UITests.CommandsDialogs
                         Console.WriteLine("Scenario 2: change 'Show stash' to disabled");
                         form.GetTestAccessor().RevisionGrid.ToggleShowStashes();
                         WaitForRevisionsToBeLoaded(form);
+                        form.RevisionGridControl.Invalidate();
+                        UITest.ProcessEventsFor(1000);
                         // Assert
                         AppSettings.ShowStashes.Should().BeFalse();
 #if DEBUG

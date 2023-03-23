@@ -169,6 +169,8 @@ Current Branch:
             {
                 BindScripts(_scripts, null);
             }
+
+            base.SettingsToPage();
         }
 
         protected override void PageToSettings()
@@ -184,6 +186,8 @@ Current Branch:
             }
 
             AppSettings.OwnScripts = ScriptManager.SerializeIntoXml();
+
+            base.PageToSettings();
         }
 
         private void BindScripts(IList<ScriptInfoProxy> scripts, ScriptInfoProxy? selectedScript)
@@ -254,6 +258,7 @@ Current Branch:
             ScriptInfoProxy script = _scripts.AddNew();
             script.HotkeyCommandIdentifier = Math.Max(ScriptManager.MinimumUserScriptID, _scripts.Max(s => s.HotkeyCommandIdentifier)) + 1;
             script.Name = "<New Script>";
+            script.Enabled = true;
 
             BindScripts(_scripts, script);
         }

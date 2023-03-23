@@ -30,7 +30,6 @@ namespace GitUI.CommandsDialogs
 
             new ToolStripItem[]
             {
-                translateToolStripMenuItem,
                 recoverLostObjectsToolStripMenuItem,
                 branchSelect,
                 toolStripButtonPull,
@@ -47,12 +46,6 @@ namespace GitUI.CommandsDialogs
             }.ForEach(ColorHelper.AdaptImageLightness);
 
             InsertFetchPullShortcuts();
-
-            if (!EnvUtils.RunningOnWindows())
-            {
-                toolStripSeparator6.Visible = false;
-                PuTTYToolStripMenuItem.Visible = false;
-            }
 
             pullToolStripMenuItem1.Tag = AppSettings.PullAction.None;
             mergeToolStripMenuItem.Tag = AppSettings.PullAction.Merge;
@@ -263,8 +256,6 @@ namespace GitUI.CommandsDialogs
                 userShell.ToolTipText = shell.Name;
                 userShell.Tag = shell;
             }
-
-            gitBashToolStripMenuItem.Tag = _shellProvider.GetShell(BashShell.ShellName);
         }
 
         private void RefreshDefaultPullAction()

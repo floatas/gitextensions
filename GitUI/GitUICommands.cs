@@ -498,6 +498,18 @@ namespace GitUI
             return DoActionOnRepo(Action);
         }
 
+        public bool StartAmendCommitDialog(IWin32Window? owner, GitRevision revision)
+        {
+            bool Action()
+            {
+                using FormCommit form = new(this, CommitKind.Amend, revision);
+                form.ShowDialog(owner);
+                return true;
+            }
+
+            return DoActionOnRepo(Action);
+        }
+
         public bool StartCommitDialog(IWin32Window? owner, string? commitMessage = null, bool showOnlyWhenChanges = false)
         {
             if (Module.IsBareRepository())
@@ -1742,6 +1754,9 @@ namespace GitUI
             // Similar to StartFileHistoryDialog()
             if (AppSettings.UseBrowseForFileHistory.Value)
             {
+                // NOTE: fileHistoryFileName doesn't need to be quoted, as it the filter will get quoted
+                // when the filter gets set.
+
                 ShowModelessForm(owner: null, requiresValidWorkingDir: true, preEvent: null, postEvent: null,
                                  () => new FormBrowse(commands: this, new BrowseArguments
                                  {
@@ -1753,8 +1768,10 @@ namespace GitUI
             }
             else
             {
+                // NOTE: fileHistoryFileName must be quoted.
+
                 ShowModelessForm(owner: null, requiresValidWorkingDir: true, preEvent: null, postEvent: null,
-                                 () => new FormFileHistory(commands: this, fileHistoryFileName, revision, filterByRevision, showBlame));
+                                 () => new FormFileHistory(commands: this, fileHistoryFileName.QuoteNE(), revision, filterByRevision, showBlame));
             }
 
             return true;
@@ -1985,6 +2002,9 @@ namespace GitUI
             internal string NormalizeFileName(string fileName) => _commands.NormalizeFileName(fileName);
 
             internal bool RunCommandBasedOnArgument(string[] args) => _commands.RunCommandBasedOnArgument(args, InitializeArguments(args));
+
+            internal void ShowFileHistoryDialog(string fileName)
+                => _commands.RunFileHistoryCommand(args: new string[] { "", "", fileName }, showBlame: false);
         }
     }
 }

@@ -849,12 +849,6 @@ namespace GitCommands
             set => SetBool("opensubmodulediffinseparatewindow", value);
         }
 
-        public static bool RevisionFileTreeShowBlame
-        {
-            get => GetBool("RevisionFileTreeShowBlame", true);
-            set => SetBool("RevisionFileTreeShowBlame", value);
-        }
-
         /// <summary>
         /// Gets or sets whether to show artificial commits in the revision graph.
         /// </summary>
@@ -1479,6 +1473,12 @@ namespace GitCommands
             set => SetFont("conemuconsolefont", value);
         }
 
+        public static bool ShowEolMarkerAsGlyph
+        {
+            get => GetBool("ShowEolMarkerAsGlyph", false);
+            set => SetBool("ShowEolMarkerAsGlyph", value);
+        }
+
         #endregion
 
         public static bool MulticolorBranches
@@ -1633,7 +1633,7 @@ namespace GitCommands
             try
             {
                 // Set environment variable
-                GitSshHelpers.SetSsh(SshPath);
+                GitSshHelpers.SetGitSshEnvironmentVariable(SshPath);
             }
             catch
             {
@@ -1834,6 +1834,8 @@ namespace GitCommands
                     // Tests are run by testhost.exe
                     _applicationExecutablePath.EndsWith("testhost.exe", StringComparison.InvariantCultureIgnoreCase) ||
                     _applicationExecutablePath.EndsWith("testhost.x86.exe", StringComparison.InvariantCultureIgnoreCase) ||
+
+                    _applicationExecutablePath.EndsWith("ReSharperTestRunner.exe", StringComparison.InvariantCultureIgnoreCase) ||
 
                     // Translations
                     _applicationExecutablePath.EndsWith("TranslationApp.exe", StringComparison.InvariantCultureIgnoreCase);

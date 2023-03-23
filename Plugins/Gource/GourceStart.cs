@@ -14,6 +14,13 @@ namespace GitExtensions.Plugins.Gource
         {
             InitializeComponent();
             InitializeComplete();
+
+            // To accommodate the translation app
+            if (gitUIArgs is null)
+            {
+                return;
+            }
+
             PathToGource = pathToGource;
             GitUIArgs = gitUIArgs;
             GitWorkingDir = gitUIArgs.GitModule.WorkingDir;
@@ -148,12 +155,12 @@ namespace GitExtensions.Plugins.Gource
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"https://github.com/acaudwell/Gource/");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/acaudwell/Gource/");
         }
 
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(@"https://github.com/acaudwell/Gource/blob/master/README");
+            OsShellUtil.OpenUrlInDefaultBrowser(@"https://github.com/acaudwell/Gource#readme");
         }
     }
 }

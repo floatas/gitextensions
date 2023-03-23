@@ -1437,47 +1437,12 @@ namespace GitCommands
 
         /// <summary>Tries to start Pageant for the specified remote repo (using the remote's PuTTY key file).</summary>
         /// <returns>true if the remote has a PuTTY key file; otherwise, false.</returns>
-        public bool StartPageantForRemote(string? remote)
-        {
-            var sshKeyFile = GetPuttyKeyFileForRemote(remote);
-            if (string.IsNullOrEmpty(sshKeyFile) || !File.Exists(sshKeyFile))
-            {
-                return false;
-            }
-
-            StartPageantWithKey(sshKeyFile);
-            return true;
-        }
-
-        public static void StartPageantWithKey(string? sshKeyFile)
-        {
-            Executable pageantExecutable = new(AppSettings.Pageant);
-
-            // ensure pageant is loaded, so we can wait for loading a key in the next command
-            // otherwise we'll stuck there waiting until pageant exits
-            if (!IsPageantRunning())
-            {
-                // NOTE we leave the process to dangle here
-                var process = pageantExecutable.Start("");
-
-                process.WaitForInputIdle();
-            }
-
-            pageantExecutable.RunCommand(sshKeyFile.Quote());
-
-            static bool IsPageantRunning()
-            {
-                var pageantProcName = Path.GetFileNameWithoutExtension(AppSettings.Pageant);
-                return Process.GetProcessesByName(pageantProcName).Length != 0;
-            }
-        }
-
         public string GetPuttyKeyFileForRemote(string? remote)
         {
             if (string.IsNullOrEmpty(remote) ||
                 string.IsNullOrEmpty(AppSettings.Pageant) ||
                 !AppSettings.AutoStartPageant ||
-                !GitSshHelpers.Plink())
+                !GitSshHelpers.IsPlink)
             {
                 return "";
             }
@@ -1487,7 +1452,7 @@ namespace GitCommands
 
         public ArgumentString FetchCmd(string? remote, string? remoteBranch, string? localBranch, bool? fetchTags = false, bool isUnshallow = false, bool pruneRemoteBranches = false, bool pruneRemoteBranchesAndTags = false)
         {
-            return new GitArgumentBuilder("fetch")
+            return new GitArgumentBuilder("fetch", gitOptions: GetFetchOptions())
             {
                 "--progress",
                 {
@@ -1499,7 +1464,7 @@ namespace GitCommands
 
         public ArgumentString PullCmd(string remote, string? remoteBranch, bool rebase, bool? fetchTags = false, bool isUnshallow = false)
         {
-            return new GitArgumentBuilder("pull")
+            return new GitArgumentBuilder("pull", gitOptions: GetFetchOptions())
             {
                 { rebase, "--rebase" },
                 "--progress",
@@ -1530,13 +1495,9 @@ namespace GitCommands
                 }
             }
 
-            bool jobsConfig = string.IsNullOrWhiteSpace(EffectiveConfigFile.GetValue("fetch.parallel"))
-                && string.IsNullOrWhiteSpace(EffectiveConfigFile.GetValue("submodule.fetchJobs"));
-
             // TODO return ArgumentBuilder and add special case ArgumentBuilder.Add(ArgumentBuilder childBuilder)
             return new ArgumentBuilder
             {
-                { jobsConfig, "--jobs=0" },
                 remote.ToPosixPath()?.Trim().Quote(),
                 branchArguments,
                 { fetchTags == true, "--tags" },
@@ -1544,6 +1505,15 @@ namespace GitCommands
                 { isUnshallow, "--unshallow" },
                 { pruneRemoteBranches || pruneRemoteBranchesAndTags, "--prune --force" },
                 { pruneRemoteBranchesAndTags, "--prune-tags" },
+            };
+        }
+
+        private ArgumentString GetFetchOptions()
+        {
+            return new ArgumentBuilder
+            {
+                { string.IsNullOrWhiteSpace(EffectiveConfigFile.GetValue("fetch.parallel")), "-c fetch.parallel=0" },
+                { string.IsNullOrWhiteSpace(EffectiveConfigFile.GetValue("submodule.fetchJobs")), "-c submodule.fetchJobs=0" },
             };
         }
 

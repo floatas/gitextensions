@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using ApprovalTests;
 using ApprovalTests.Namers;
@@ -114,42 +115,42 @@ namespace GitCommandsTests
             using (_executable.StageOutput("rev-parse --quiet --verify \"refs/heads/remotebranch~0\"", null))
             {
                 Assert.AreEqual(
-                    "fetch --progress --jobs=0 \"remote\" +remotebranch:refs/heads/localbranch --no-tags",
+                    "-c fetch.parallel=0 -c submodule.fetchJobs=0 fetch --progress \"remote\" +remotebranch:refs/heads/localbranch --no-tags",
                     _gitModule.FetchCmd("remote", "remotebranch", "localbranch").Arguments);
             }
 
             using (_executable.StageOutput("rev-parse --quiet --verify \"refs/heads/remotebranch~0\"", null))
             {
                 Assert.AreEqual(
-                    "fetch --progress --jobs=0 \"remote\" +remotebranch:refs/heads/localbranch --tags",
+                    "-c fetch.parallel=0 -c submodule.fetchJobs=0 fetch --progress \"remote\" +remotebranch:refs/heads/localbranch --tags",
                     _gitModule.FetchCmd("remote", "remotebranch", "localbranch", true).Arguments);
             }
 
             using (_executable.StageOutput("rev-parse --quiet --verify \"refs/heads/remotebranch~0\"", null))
             {
                 Assert.AreEqual(
-                    "fetch --progress --jobs=0 \"remote\" +remotebranch:refs/heads/localbranch",
+                    "-c fetch.parallel=0 -c submodule.fetchJobs=0 fetch --progress \"remote\" +remotebranch:refs/heads/localbranch",
                     _gitModule.FetchCmd("remote", "remotebranch", "localbranch", null).Arguments);
             }
 
             using (_executable.StageOutput("rev-parse --quiet --verify \"refs/heads/remotebranch~0\"", null))
             {
                 Assert.AreEqual(
-                    "fetch --progress --jobs=0 \"remote\" +remotebranch:refs/heads/localbranch --no-tags --unshallow",
+                    "-c fetch.parallel=0 -c submodule.fetchJobs=0 fetch --progress \"remote\" +remotebranch:refs/heads/localbranch --no-tags --unshallow",
                     _gitModule.FetchCmd("remote", "remotebranch", "localbranch", isUnshallow: true).Arguments);
             }
 
             using (_executable.StageOutput("rev-parse --quiet --verify \"refs/heads/remotebranch~0\"", null))
             {
                 Assert.AreEqual(
-                    "fetch --progress --jobs=0 \"remote\" +remotebranch:refs/heads/localbranch --no-tags --prune --force",
+                    "-c fetch.parallel=0 -c submodule.fetchJobs=0 fetch --progress \"remote\" +remotebranch:refs/heads/localbranch --no-tags --prune --force",
                     _gitModule.FetchCmd("remote", "remotebranch", "localbranch", pruneRemoteBranches: true).Arguments);
             }
 
             using (_executable.StageOutput("rev-parse --quiet --verify \"refs/heads/remotebranch~0\"", null))
             {
                 Assert.AreEqual(
-                    "fetch --progress --jobs=0 \"remote\" +remotebranch:refs/heads/localbranch --no-tags --prune --force --prune-tags",
+                    "-c fetch.parallel=0 -c submodule.fetchJobs=0 fetch --progress \"remote\" +remotebranch:refs/heads/localbranch --no-tags --prune --force --prune-tags",
                     _gitModule.FetchCmd("remote", "remotebranch", "localbranch", pruneRemoteBranches: true, pruneRemoteBranchesAndTags: true).Arguments);
             }
         }
@@ -679,18 +680,18 @@ namespace GitCommandsTests
             Assert.AreEqual(status, stagedStatus);
         }
 
-        [Ignore("See https://github.com/gitextensions/gitextensions/issues/10387")]
         [Test]
         public void GetSubmodulesLocalPaths()
         {
-            List<CommonTestUtils.GitModuleTestHelper> moduleTestHelpers = new();
+            List<GitModuleTestHelper> moduleTestHelpers = new();
             try
             {
                 const int numModules = 4;
 
                 for (int i = 0; i < numModules; ++i)
                 {
-                    moduleTestHelpers.Add(new CommonTestUtils.GitModuleTestHelper($"repo{i}"));
+                    moduleTestHelpers.Add(new GitModuleTestHelper($"repo{i}"));
+                    Debug.WriteLine($"Repo[{i}]:{moduleTestHelpers[i].TemporaryPath}");
                 }
 
                 foreach (var helper in moduleTestHelpers)
@@ -705,13 +706,14 @@ namespace GitCommandsTests
                     var child = moduleTestHelpers[i];
 
                     // Add child as submodule of parent
-                    parent.Module.GitExecutable.Execute(GitCommandHelpers.AddSubmoduleCmd(child.Module.WorkingDir.ToPosixPath(), $"repo{i}", null, true), throwOnErrorExit: false);
-                    parent.Module.GitExecutable.GetOutput(@"commit -am ""Add submodule""");
+                    parent.AddSubmodule(child, $"repo{i}");
                 }
 
                 // Init all modules of root
                 var root = moduleTestHelpers[0];
-                root.Module.GitExecutable.Execute(@"submodule update --init --recursive", throwOnErrorExit: false);
+                IEnumerable<GitConfigItem> cfgs = GitCommandHelpers.GetAllowFileConfig();
+
+                root.Module.GitExecutable.Execute(GitCommandHelpers.SubmoduleUpdateCmd(name: null, cfgs));
 
                 var paths = root.Module.GetSubmodulesLocalPaths(recursive: true);
                 Assert.AreEqual(new string[] { "repo1", "repo1/repo2", "repo1/repo2/repo3" }, paths, $"Modules: {string.Join(" ", paths)}");
@@ -745,7 +747,7 @@ namespace GitCommandsTests
         public void GetSuperprojectCurrentCheckout()
         {
             // Create super and sub repo
-            using CommonTestUtils.GitModuleTestHelper moduleTestHelperSuper = new("super repo"),
+            using GitModuleTestHelper moduleTestHelperSuper = new("super repo"),
                                                        moduleTestHelperSub = new("sub repo");
 
             // Add and init the submodule
